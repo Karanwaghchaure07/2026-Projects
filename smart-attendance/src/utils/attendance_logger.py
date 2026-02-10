@@ -1,43 +1,28 @@
-"""
-Attendance logging to CSV with duplicate prevention.
-Handles writing attendance records and preventing duplicates.
-"""
 import csv
 import os
 from datetime import datetime
-from src.config import ATTENDANCE_FILE, ATTENDANCE_DIR, DUPLICATE_PREVENTION_MINUTES
 
+ATTENDANCE_FILE = os.path.join("data", "attendance", "attendance.csv")
+os.makedirs(os.path.dirname(ATTENDANCE_FILE), exist_ok=True)
 
-class AttendanceLogger:
-    def __init__(self):
-        """Initialize attendance logger."""
-        os.makedirs(ATTENDANCE_DIR, exist_ok=True)
-        self._init_csv()
-    
-    def _init_csv(self):
-        """Initialize CSV file with headers if not exists."""
-        if not os.path.exists(ATTENDANCE_FILE):
-            with open(ATTENDANCE_FILE, 'w', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(['Name', 'Date', 'Time', 'Status'])
-    
-    def mark_attendance(self, person_name):
-        """
-        Mark attendance for a person with duplicate prevention.
-        
-        Args:
-            person_name: Name of the person
-        """
-        pass
-    
-    def is_duplicate(self, person_name):
-        """
-        Check if attendance was already marked recently.
-        
-        Args:
-            person_name: Name of the person
-            
-        Returns:
-            True if duplicate, False otherwise
-        """
-        pass
+def mark_attendance(person_id, name):
+    today = datetime.now().strftime("%Y-%m-%d")
+    now_time = datetime.now().strftime("%H:%M:%S")
+
+    already_marked = False
+
+    if os.path.exists(ATTENDANCE_FILE):
+        with open(ATTENDANCE_FILE, "r", newline="") as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if row and row[0] == person_id and row[2] == today:
+                    already_marked = True
+                    break
+
+    if not already_marked:
+        with open(ATTENDANCE_FILE, "a", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow([person_id, name, today, now_time])
+        return True
+
+    return False
